@@ -12,7 +12,7 @@ token=''
 source /tmp/pia.info.sh
 
 response="$(
-    curl --silent --get \
+    curl --silent --get --retry 5 \
         --connect-to "$name::$ip:" \
         --cacert "$PIA_CERT" \
         --data-urlencode "token=$token" \
@@ -48,7 +48,7 @@ if test -n "${TRANSMISSION_URL:-}"; then
 
         sid="$(
             jq --null-input '.method = "session-stats"' | \
-                curl --silent --include  \
+                curl --silent --retry 5 --include  \
                     "${auth[@]}" \
                     --data-binary '@-' \
                     --header 'Content-Type: application/json' \
@@ -58,7 +58,7 @@ if test -n "${TRANSMISSION_URL:-}"; then
                 tr -d '\r\n'
         )"
 
-        curl --silent \
+        curl --silent --retry 5 \
             "${auth[@]}" \
             --data-binary "$data" \
             --header 'Content-Type: application/json' \
@@ -73,7 +73,7 @@ fi
 
 while true; do
     response="$(
-        curl --silent --get \
+        curl --silent --get --retry 5 \
             --connect-to "$name::$ip:" \
             --cacert "$PIA_CERT" \
             --data-urlencode "payload=$payload" \
