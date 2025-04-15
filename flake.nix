@@ -9,19 +9,29 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }: {
-    nixosModules.default = import ./module.nix;
-  } // flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = nixpkgs.legacyPackages.${system};
-    in
+  outputs =
     {
-      devShells.default = pkgs.mkShell {
-        nativeBuildInputs = with pkgs; [
-          curl
-          jq
-          wireguard-tools
-        ];
-      };
-    });
+      self,
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
+    {
+      nixosModules.default = import ./module.nix;
+    }
+    // flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        devShells.default = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [
+            curl
+            jq
+            wireguard-tools
+          ];
+        };
+      }
+    );
 }
