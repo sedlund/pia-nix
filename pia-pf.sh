@@ -2,26 +2,27 @@
 set -euo pipefail
 
 if [ "$EUID" -ne 0 ]; then
-    echo "This script must be run as root!" >&2
-    exit 1
+  echo "This script must be run as root!" >&2
+  exit 1
 fi
 
 name=''
 ip=''
 token=''
+# shellcheck disable=SC1091 # This is port info as provided when pia-up.sh runs
 source /tmp/pia.info.sh
 
 response="$(
-    curl --silent --get --retry 5 \
-        --connect-to "$name::$ip:" \
-        --cacert "$PIA_CERT" \
-        --data-urlencode "token=$token" \
-        "https://$name:19999/getSignature"
+  curl --silent --get --retry 5 \
+    --connect-to "$name::$ip:" \
+    --cacert "$PIA_CERT" \
+    --data-urlencode "token=$token" \
+    "https://$name:19999/getSignature"
 )"
 if [ "$(jq --raw-output '.status' <<<"$response")" != 'OK' ]; then
-    echo 'getSignature error!' >&2
-    echo "$response" >&2
-    exit 1
+  echo 'getSignature error!' >&2
+  echo "$response" >&2
+  exit 1
 fi
 payload="$(jq --raw-output '.payload' <<<"$response")"
 signature="$(jq --raw-output '.signature' <<<"$response")"
@@ -38,53 +39,53 @@ branch = ((not, ((equal, ((network.listen.port)), ((value, $myport)))))), \\
 EOF
 
 if test -n "${TRANSMISSION_URL:-}"; then
-    function transmission {
-        local data="$1"
+  function transmission {
+    local data="$1"
 
-        auth=()
-        if test -n "${TRANSMISSION_USERNAME:-}"; then
-            auth=("--basic" "$TRANSMISSION_USERNAME:$TRANSMISSION_PASSWORD")
-        fi
+    auth=()
+    if test -n "${TRANSMISSION_USERNAME:-}"; then
+      auth=("--basic" "$TRANSMISSION_USERNAME:$TRANSMISSION_PASSWORD")
+    fi
 
-        sid="$(
-            jq --null-input '.method = "session-stats"' | \
-                curl --silent --retry 5 --include  \
-                    "${auth[@]}" \
-                    --data-binary '@-' \
-                    --header 'Content-Type: application/json' \
-                    --header 'Accept: application/json' \
-                    "$TRANSMISSION_URL" | \
-                sed --silent --regexp-extended 's/^X-Transmission-Session-Id: (\S+)/\1/p' | \
-                tr -d '\r\n'
-        )"
+    sid="$(
+      jq --null-input '.method = "session-stats"' |
+        curl --silent --retry 5 --include \
+          "${auth[@]}" \
+          --data-binary '@-' \
+          --header 'Content-Type: application/json' \
+          --header 'Accept: application/json' \
+          "$TRANSMISSION_URL" |
+        sed --silent --regexp-extended 's/^X-Transmission-Session-Id: (\S+)/\1/p' |
+        tr -d '\r\n'
+    )"
 
-        curl --silent --retry 5 \
-            "${auth[@]}" \
-            --data-binary "$data" \
-            --header 'Content-Type: application/json' \
-            --header 'Accept: application/json' \
-            --header "X-Transmission-Session-Id: $sid" \
-            "$TRANSMISSION_URL"
-    }
+    curl --silent --retry 5 \
+      "${auth[@]}" \
+      --data-binary "$data" \
+      --header 'Content-Type: application/json' \
+      --header 'Accept: application/json' \
+      --header "X-Transmission-Session-Id: $sid" \
+      "$TRANSMISSION_URL"
+  }
 
-    # shellcheck disable=SC2016
-    transmission "$(jq --null-input --argjson port "$myport" '.method = "session-set" | .arguments["peer-port"] = $port')"
+  # shellcheck disable=SC2016
+  transmission "$(jq --null-input --argjson port "$myport" '.method = "session-set" | .arguments["peer-port"] = $port')"
 fi
 
 while true; do
-    response="$(
-        curl --silent --get --retry 5 \
-            --connect-to "$name::$ip:" \
-            --cacert "$PIA_CERT" \
-            --data-urlencode "payload=$payload" \
-            --data-urlencode "signature=$signature" \
-            "https://$name:19999/bindPort"
-    )"
-    if [ "$(jq --raw-output '.status' <<<"$response")" != 'OK' ]; then
-        echo 'bindPort error!' >&2
-        echo "$response" >&2
-        exit 1
-    fi
+  response="$(
+    curl --silent --get --retry 5 \
+      --connect-to "$name::$ip:" \
+      --cacert "$PIA_CERT" \
+      --data-urlencode "payload=$payload" \
+      --data-urlencode "signature=$signature" \
+      "https://$name:19999/bindPort"
+  )"
+  if [ "$(jq --raw-output '.status' <<<"$response")" != 'OK' ]; then
+    echo 'bindPort error!' >&2
+    echo "$response" >&2
+    exit 1
+  fi
 
-    sleep 10m
+  sleep 10m
 done
