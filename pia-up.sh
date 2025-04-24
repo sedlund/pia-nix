@@ -77,9 +77,11 @@ ip -n "$PIA_NETNS" route add default dev "$PIA_INTERFACE"
 
 ip netns exec "$PIA_NETNS" ping -n -c 1 -w 5 -s 1024 "$vip"
 
-{
-  echo "name='$name'"
-  echo "ip='$ip'"
-  echo "token='$token'"
-  echo "myip='$myip'"
-} >/tmp/pia.info.sh
+rm /tmp/pia.info.sh 2>/dev/null # rm file that may have wrong perms that clobbering wont resolve.
+umask 077
+cat << EOF >/tmp/pia.info.sh
+ip='$ip'
+myip='$myip'
+name='$name'
+token='$token'
+EOF
