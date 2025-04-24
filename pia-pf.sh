@@ -6,9 +6,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-name=''
-ip=''
-token=''
+declare -g name ip token
 # shellcheck disable=SC1091 # This is port info as provided when pia-up.sh runs
 source /tmp/pia.info.sh
 

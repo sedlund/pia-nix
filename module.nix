@@ -156,6 +156,7 @@ in
             wantedBy = [ "multi-user.target" ];
             wants = [ "pia-wg.service" ];
 
+            description = "Forward port ${builtins.toString port} in ${cfg.netns} network namespace to host network.";
             serviceConfig = {
               ExecStart = ''${pkgs.socat}/bin/socat tcp-listen:${builtins.toString port},fork,reuseaddr exec:'${pkgs.iproute2}/bin/ip netns exec ${cfg.netns} ${pkgs.socat}/bin/socat STDIO "tcp-connect:127.0.0.1:${builtins.toString port}"',nofork'';
               Restart = "on-failure";
@@ -182,6 +183,7 @@ in
           wantedBy = [ "multi-user.target" ];
           wants = [ "network-online.target" ];
 
+          enableStrictShellChecks = true;
           environment = {
             PIA_CERT = ./ca.rsa.4096.crt;
             PIA_INTERFACE = cfg.interface;
@@ -194,6 +196,7 @@ in
             PIA_USER_CMD = cfg.usernameCommand;
             PIA_USER_FILE = cfg.usernameFile;
           };
+          description = "Private Internet Access WireGuard VPN in network namespace: ${cfg.netns}.";
           serviceConfig = {
             ExecStart = script ./pia-up.sh;
             ExecStopPost = script ./pia-down.sh;
@@ -211,6 +214,7 @@ in
           bindsTo = [ "pia-wg.service" ];
           wantedBy = [ "multi-user.target" ];
 
+          enableStrictShellChecks = true;
           environment = {
             PIA_CERT = ./ca.rsa.4096.crt;
             TRANSMISSION_PASSWORD = cfg.portForwarding.transmission.password;
@@ -218,6 +222,7 @@ in
               if cfg.portForwarding.transmission.enable then cfg.portForwarding.transmission.url else "";
             TRANSMISSION_USERNAME = cfg.portForwarding.transmission.username;
           };
+          description = "Request port-forward from PIA and configure torrent clients.";
           serviceConfig = {
             ExecStart = script ./pia-pf.sh;
             NetworkNamespacePath = "/var/run/netns/${cfg.netns}";
