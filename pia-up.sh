@@ -37,6 +37,9 @@ if test -n "${PIA_PASS_CMD:-}"; then
   PIA_PASS="$("$0" -c "$PIA_PASS_CMD")"
 fi
 
+# FIXME this token will eventually expire because of not refreshing the
+# endpoint, causing pia-wg-pf to fail to update ports
+# https://github.com/pia-foss/manual-connections/blob/master/get_token.sh
 response="$(curl --silent --user "$PIA_USER:$PIA_PASS" 'https://www.privateinternetaccess.com/gtoken/generateToken')"
 if [ "$(jq --raw-output '.status' <<<"$response")" != 'OK' ]; then
   echo 'generateToken error!' >&2
@@ -77,7 +80,7 @@ ip -n "$PIA_NETNS" route add default dev "$PIA_INTERFACE"
 
 ip netns exec "$PIA_NETNS" ping -n -c 1 -w 5 -s 1024 "$vip"
 
-rm /tmp/pia.info.sh 2>/dev/null # rm file that may have wrong perms that clobbering wont resolve.
+rm /tmp/pia.info.sh 2>/dev/null || true # rm file that may have wrong perms that clobbering wont resolve.
 umask 077
 cat << EOF >/tmp/pia.info.sh
 ip='$ip'
