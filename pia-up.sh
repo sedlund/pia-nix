@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
 set -euo pipefail
+set -x
 
 if [ "$EUID" -ne 0 ]; then
   echo "This script must be run as root!" >&2
@@ -80,7 +80,7 @@ ip -n "$PIA_NETNS" route add default dev "$PIA_INTERFACE"
 
 ip netns exec "$PIA_NETNS" ping -n -c 1 -w 5 -s 1024 "$vip"
 
-rm /tmp/pia.info.sh 2>/dev/null || true # rm file that may have wrong perms that clobbering wont resolve.
+rm /tmp/pia.info.sh &>/dev/null || true # rm file that may have wrong perms that clobbering wont resolve.
 umask 077
 cat << EOF >/tmp/pia.info.sh
 ip='$ip'
