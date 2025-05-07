@@ -11,7 +11,7 @@ ip -n "$PIA_NETNS" link delete dev "$PIA_INTERFACE" || true
 privkey="$(wg genkey)"
 pubkey="$(wg pubkey <<<"$privkey")"
 
-response="$(curl --silent 'https://serverlist.piaservers.net/vpninfo/servers/v6' | head -n1)"
+response="$(curl --silent --retry 5 --connect-timeout 5 'https://serverlist.piaservers.net/vpninfo/servers/v6' | head -n1)"
 mapfile -t ports < <(jq --raw-output '.groups.wg[].ports[]' <<<"$response")
 # shellcheck disable=SC2016
 mapfile -t ips < <(jq --raw-output --arg region "$PIA_REGION" '.regions[] | select(.id == $region) | .servers.wg[].ip' <<<"$response")
@@ -40,7 +40,7 @@ fi
 # FIXME this token will eventually expire because of not refreshing the
 # endpoint, causing pia-wg-pf to fail to update ports
 # https://github.com/pia-foss/manual-connections/blob/master/get_token.sh
-response="$(curl --silent --user "$PIA_USER:$PIA_PASS" 'https://www.privateinternetaccess.com/gtoken/generateToken')"
+response="$(curl --silent --retry 5 --connect-timeout 5 --user "$PIA_USER:$PIA_PASS" 'https://www.privateinternetaccess.com/gtoken/generateToken')"
 if [ "$(jq --raw-output '.status' <<<"$response")" != 'OK' ]; then
   echo 'generateToken error!' >&2
   echo "$response" >&2
@@ -49,7 +49,7 @@ fi
 token="$(jq --raw-output '.token' <<<"$response")"
 
 response="$(
-  curl --silent --get \
+  curl --silent --retry 5 --connect-timeout 5 --get \
     --connect-to "$name::$ip:" \
     --cacert "$PIA_CERT" \
     --data-urlencode "pt=$token" \

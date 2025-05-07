@@ -11,7 +11,7 @@ declare -g name ip token
 source /tmp/pia.info.sh
 
 response="$(
-  curl --get --retry 5 \
+  curl --get --retry 5 --connect-timeout 5 \
     --connect-to "$name::$ip:" \
     --cacert "$PIA_CERT" \
     --data-urlencode "token=$token" \
@@ -47,7 +47,7 @@ if test -n "${TRANSMISSION_URL:-}"; then
 
     sid="$(
       jq --null-input '.method = "session-stats"' |
-        curl --retry 5 --include \
+        curl --retry 5 --connect-timeout 5 --include \
           "${auth[@]}" \
           --data-binary '@-' \
           --header 'Content-Type: application/json' \
@@ -57,7 +57,7 @@ if test -n "${TRANSMISSION_URL:-}"; then
         tr -d '\r\n'
     )"
 
-    curl --retry 5 \
+    curl --retry 5 --connect-timeout 5 \
       "${auth[@]}" \
       --data-binary "$data" \
       --header 'Content-Type: application/json' \
@@ -72,7 +72,7 @@ fi
 
 while true; do
   response="$(
-    curl --get --retry 5 \
+    curl --get --retry 5 --connect-timeout 5 \
       --connect-to "$name::$ip:" \
       --cacert "$PIA_CERT" \
       --data-urlencode "payload=$payload" \
