@@ -32,96 +32,105 @@ let
     "${pkg}/bin/${name}";
 in
 {
-  options.services.pia-wg = with lib.types; {
-    enable = lib.mkEnableOption "pia-wg";
+  options.services.pia-wg =
+    let
+      inherit (lib.types)
+        listOf
+        nullOr
+        port
+        str
+        ;
+    in
+    {
+      enable = lib.mkEnableOption "pia-wg";
 
-    username = lib.mkOption {
-      description = "PIA username";
-      type = nullOr str;
-      default = null;
-    };
-
-    usernameFile = lib.mkOption {
-      description = "Path to a file containing the PIA username";
-      type = nullOr str;
-      default = null;
-    };
-
-    usernameCommand = lib.mkOption {
-      description = "Command to run to obtain the PIA username";
-      type = nullOr str;
-      default = null;
-    };
-
-    password = lib.mkOption {
-      description = "PIA password";
-      type = nullOr str;
-      default = null;
-    };
-
-    passwordFile = lib.mkOption {
-      description = "Path to a file containing the PIA password";
-      type = nullOr str;
-      default = null;
-    };
-
-    passwordCommand = lib.mkOption {
-      description = "Command to run to obtain the PIA password";
-      type = nullOr str;
-      default = null;
-    };
-
-    region = lib.mkOption {
-      description = "PIA region to connect to";
-      type = str;
-      default = "finland";
-    };
-
-    interface = lib.mkOption {
-      description = "Wireguard network interface name";
-      type = str;
-      default = "pia";
-    };
-
-    netns = lib.mkOption {
-      description = "Network namespace name";
-      type = str;
-      default = "pia";
-    };
-
-    services = lib.mkOption {
-      description = "Systemd services to put into the PIA network namespace";
-      type = listOf str;
-      default = [ ];
-    };
-
-    nat = lib.mkOption {
-      description = "TCP ports to forward from the main network namespace to the PIA network namespace";
-      type = listOf port;
-      default = [ ];
-    };
-
-    portForwarding.enable = lib.mkEnableOption "port forwarding";
-
-    portForwarding.transmission = {
-      enable = lib.mkEnableOption "Transmission port update";
-      url = lib.mkOption {
-        description = "Transmission RPC endpoint URL";
-        type = str;
-        default = "http://127.0.0.1:${builtins.toString config.services.transmission.settings.rpc-port}/transmission/rpc";
-      };
       username = lib.mkOption {
-        description = "Transmission RPC endpoint username, if authentication if enabled";
-        type = str;
-        default = "";
+        description = "PIA username";
+        type = nullOr str;
+        default = null;
       };
+
+      usernameFile = lib.mkOption {
+        description = "Path to a file containing the PIA username";
+        type = nullOr str;
+        default = null;
+      };
+
+      usernameCommand = lib.mkOption {
+        description = "Command to run to obtain the PIA username";
+        type = nullOr str;
+        default = null;
+      };
+
       password = lib.mkOption {
-        description = "Transmission RPC endpoint password, if authentication if enabled";
+        description = "PIA password";
+        type = nullOr str;
+        default = null;
+      };
+
+      passwordFile = lib.mkOption {
+        description = "Path to a file containing the PIA password";
+        type = nullOr str;
+        default = null;
+      };
+
+      passwordCommand = lib.mkOption {
+        description = "Command to run to obtain the PIA password";
+        type = nullOr str;
+        default = null;
+      };
+
+      region = lib.mkOption {
+        description = "PIA region to connect to";
         type = str;
-        default = "";
+        default = "finland";
+      };
+
+      interface = lib.mkOption {
+        description = "Wireguard network interface name";
+        type = str;
+        default = "pia";
+      };
+
+      netns = lib.mkOption {
+        description = "Network namespace name";
+        type = str;
+        default = "pia";
+      };
+
+      services = lib.mkOption {
+        description = "Systemd services to put into the PIA network namespace";
+        type = listOf str;
+        default = [ ];
+      };
+
+      nat = lib.mkOption {
+        description = "TCP ports to forward from the main network namespace to the PIA network namespace";
+        type = listOf port;
+        default = [ ];
+      };
+
+      portForwarding.enable = lib.mkEnableOption "port forwarding";
+
+      portForwarding.transmission = {
+        enable = lib.mkEnableOption "Transmission port update";
+        url = lib.mkOption {
+          description = "Transmission RPC endpoint URL";
+          type = str;
+          default = "http://127.0.0.1:${builtins.toString config.services.transmission.settings.rpc-port}/transmission/rpc";
+        };
+        username = lib.mkOption {
+          description = "Transmission RPC endpoint username, if authentication if enabled";
+          type = str;
+          default = "";
+        };
+        password = lib.mkOption {
+          description = "Transmission RPC endpoint password, if authentication if enabled";
+          type = str;
+          default = "";
+        };
       };
     };
-  };
 
   config = lib.mkIf cfg.enable {
     assertions = [
