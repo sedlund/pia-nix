@@ -118,6 +118,7 @@ in
           description = "Transmission RPC endpoint URL";
           type = str;
           default = "http://127.0.0.1:${builtins.toString config.services.transmission.settings.rpc-port}/transmission/rpc";
+          defaultText = "http://127.0.0.1:`builtins.toString` {option}`config.services.transmission.settings.rpc-port`/transmission/rpc";
         };
         username = lib.mkOption {
           description = "Transmission RPC endpoint username, if authentication if enabled";
